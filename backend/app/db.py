@@ -35,3 +35,73 @@ def upload_image(merchant_id: str, data: bytes, mime: str) -> tuple[str, str]:
 def insert_submission(row: dict) -> str:
     res = get_supabase().table("submissions").insert(row).execute()
     return res.data[0]["id"]
+
+
+# Kolom ini sengaja tidak menyertakan image_path maupun raw_ai_json karena keduanya
+# adalah detail internal yang tidak perlu dikirim ke aplikasi mobile.
+SUBMISSION_PUBLIC_COLUMNS = (
+    "id,merchant_id,image_url,is_waste_detected,waste_type,"
+    "estimated_volume_liters,fill_percentage,purity_grade,confidence,"
+    "biodiesel_liters,co2_saved_kg,cashback_idr,ai_notes,"
+    "pickup_requested,created_at"
+)
+
+
+def get_merchant(merchant_id: str) -> dict | None:
+    res = (
+        get_supabase()
+        .table("merchants")
+        .select("id,name,address,lat,lng,created_at")
+        .eq("id", merchant_id)
+        .limit(1)
+        .execute()
+    )
+    return res.data[0] if res.data else None
+
+
+def list_merchants() -> list[dict]:
+    res = (
+        get_supabase()
+        .table("merchants")
+        .select("id,name,address,lat,lng,created_at")
+        .order("name")
+        .execute()
+    )
+    return res.data or []
+
+
+def list_submissions(merchant_id: str, limit: int | None = None) -> list[dict]:
+    query = (
+        get_supabase()
+        .table("submissions")
+        .select(SUBMISSION_PUBLIC_COLUMNS)
+        .eq("merchant_id", merchant_id)
+        .order("created_at", desc=True)
+    )
+    if limit is not None:
+        query = query.limit(limit)
+    res = query.execute()
+    return res.data or []
+
+
+def get_submission(submission_id: str) -> dict | None:
+    res = (
+        get_supabase()
+        .table("submissions")
+        .select("id,pickup_requested")
+        .eq("id", submission_id)
+        .limit(1)
+        .execute()
+    )
+    return res.data[0] if res.data else None
+
+
+def request_pickup(submission_id: str) -> dict:
+    res = (
+        get_supabase()
+        .table("submissions")
+        .update({"pickup_requested": True})
+        .eq("id", submission_id)
+        .execute()
+    )
+    return res.data[0]

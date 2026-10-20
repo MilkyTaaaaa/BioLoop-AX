@@ -23,6 +23,15 @@ curl -X POST http://localhost:8000/api/submit-waste \
   -F image=@jeriken.jpg
 ```
 
+## Endpoint pendukung Frontend
+
+- `GET /api/merchants` — daftar semua merchant, diurutkan berdasarkan nama, untuk dropdown demo.
+- `GET /api/merchants/{merchant_id}/summary` — ringkasan kontribusi merchant: `merchant_name`, total liter jelantah, biodiesel, CO2, cashback, serta `recent_submissions` (maksimal 10 data terbaru).
+- `GET /api/history/{merchant_id}` — seluruh riwayat submission merchant, terbaru lebih dulu. Respons berisi metadata `merchant` dan array `submissions`.
+- `PATCH /api/submissions/{submission_id}/request-pickup` — menandai submission untuk dijemput. Respons: `{ "submission_id": "...", "pickup_requested": true }`.
+
+Semua ID pada path harus UUID valid. ID merchant atau submission yang tidak ditemukan akan menghasilkan `404`; UUID yang tidak valid menghasilkan `400`.
+
 ## Deploy (Hari 3)
 Railway/Render: start command `uvicorn app.main:app --host 0.0.0.0 --port $PORT`,
 isi semua env dari `.env.example`, set `CORS_ORIGINS` ke URL Vercel FE.

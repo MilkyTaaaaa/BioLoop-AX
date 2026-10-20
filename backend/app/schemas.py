@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import Literal, Optional
+
 from pydantic import BaseModel, Field, field_validator
 
 WasteType = Literal["used_cooking_oil", "coffee_grounds", "mixed_organic", "other"]
@@ -38,3 +40,52 @@ class SubmitWasteResponse(BaseModel):
     image_url: Optional[str]
     vision: VisionResult
     mrv: MRVResult
+
+
+class MerchantResponse(BaseModel):
+    id: str
+    name: str
+    address: Optional[str] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    created_at: datetime
+
+
+class SubmissionHistoryItem(BaseModel):
+    """Data submission yang aman ditampilkan pada riwayat aplikasi."""
+
+    id: str
+    merchant_id: str
+    image_url: Optional[str] = None
+    is_waste_detected: bool
+    waste_type: Optional[str] = None
+    estimated_volume_liters: Optional[float] = None
+    fill_percentage: Optional[int] = None
+    purity_grade: Optional[str] = None
+    confidence: Optional[float] = None
+    biodiesel_liters: Optional[float] = None
+    co2_saved_kg: Optional[float] = None
+    cashback_idr: Optional[int] = None
+    ai_notes: Optional[str] = None
+    pickup_requested: bool
+    created_at: datetime
+
+
+class MerchantSummaryResponse(BaseModel):
+    merchant_id: str
+    merchant_name: str
+    total_used_cooking_oil_liters: float
+    total_biodiesel_liters: float
+    total_co2_saved_kg: float
+    total_cashback_idr: int
+    recent_submissions: list[SubmissionHistoryItem]
+
+
+class HistoryResponse(BaseModel):
+    merchant: MerchantResponse
+    submissions: list[SubmissionHistoryItem]
+
+
+class PickupRequestResponse(BaseModel):
+    submission_id: str
+    pickup_requested: bool
