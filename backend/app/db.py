@@ -18,7 +18,14 @@ def merchant_exists(merchant_id: str) -> bool:
 
 def upload_image(merchant_id: str, data: bytes, mime: str) -> tuple[str, str]:
     s = get_settings()
-    ext = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}.get(mime, "jpg")
+    ext_map = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/heic": "heic",
+        "image/heif": "heif",
+    }
+    ext = ext_map.get(mime, "jpg")
     path = f"{merchant_id}/{uuid.uuid4()}.{ext}"
     bucket = get_supabase().storage.from_(s.supabase_bucket)
     bucket.upload(path, data, {"content-type": mime})
