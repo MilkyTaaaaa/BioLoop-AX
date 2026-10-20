@@ -105,3 +105,22 @@ def request_pickup(submission_id: str) -> dict:
         .execute()
     )
     return res.data[0]
+
+
+def complete_submission_pickup(submission_id: str, actual_liters: float, biodiesel: float, co2: float, cashback: int) -> dict | None:
+    res = (
+        get_supabase()
+        .table("submissions")
+        .update({
+            "actual_volume_liters": actual_liters,
+            "estimated_volume_liters": actual_liters,  # Sinkronkan agar summary kafe ikut terupdate
+            "biodiesel_liters": biodiesel,
+            "co2_saved_kg": co2,
+            "cashback_idr": cashback,
+            "pickup_requested": False,                 # Keluarkan dari antrean tunggu
+            "pickup_status": "completed",              # Tandai selesai dijemput
+        })
+        .eq("id", submission_id)
+        .execute()
+    )
+    return res.data[0] if res.data else None

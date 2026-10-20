@@ -8,7 +8,7 @@ from app.schemas import MRVResult, VisionResult
 
 BIODIESEL_YIELD_PER_L_UCO = 0.88      # ASUMSI: liter biodiesel per liter jelantah
 CO2_SAVED_KG_PER_L = {                # ASUMSI: kg CO2e dicegah per liter
-    "used_cooking_oil": 2.5,
+    "used_cooking_oil": 2.3,
     "coffee_grounds": 0.6,
     "mixed_organic": 0.5,
     "other": 0.0,

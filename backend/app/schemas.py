@@ -89,3 +89,16 @@ class HistoryResponse(BaseModel):
 class PickupRequestResponse(BaseModel):
     submission_id: str
     pickup_requested: bool
+
+
+class CompletePickupRequest(BaseModel):
+    actual_volume_liters: float = Field(gt=0, description="Volume aktual liter jelantah yang ditimbang pengepul")
+
+
+class CompletePickupResponse(BaseModel):
+    submission_id: str
+    pickup_status: str
+    actual_volume_liters: float
+    biodiesel_liters: float
+    co2_saved_kg: float
+    cashback_idr: int

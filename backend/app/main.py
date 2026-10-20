@@ -14,6 +14,8 @@ from app.schemas import (
     MerchantSummaryResponse,
     PickupRequestResponse,
     SubmitWasteResponse,
+    CompletePickupResponse,
+    CompletePickupRequest
 )
 from app.services.mrv import compute_mrv
 from app.services.vision import analyze_waste_image
@@ -163,3 +165,36 @@ async def submit_waste(merchant_id: str = Form(...), image: UploadFile = File(..
     })
 
     return SubmitWasteResponse(submission_id=sub_id, image_url=url, vision=vision, mrv=mrv)
+
+@app.patch("/api/submissions/{submission_id}/complete-pickup", response_model=CompletePickupResponse)
+async def complete_pickup(submission_id: str, payload: CompletePickupRequest):
+    try:
+        valid_sub_uuid = str(uuid.UUID(submission_id.strip()))
+    except ValueError:
+        raise HTTPException(400, "Format submission_id tidak valid (harus berupa UUID)")
+
+    # Hitung ulang berdasarkan volume aktual yang dicatat Pak Joko (asumsi Grade A/standar EU RED II: 2.3 kg CO2e/L, Rp 5.000/L)
+    actual_l = round(payload.actual_volume_liters, 2)
+    biodiesel_l = round(actual_l * 0.88, 2)
+    co2_kg = round(actual_l * 2.3, 2)
+    cashback_rp = int(round((actual_l * 5000) / 500) * 500)
+
+    updated = await run_in_threadpool(
+        db.complete_submission_pickup,
+        valid_sub_uuid,
+        actual_l,
+        biodiesel_l,
+        co2_kg,
+        cashback_rp,
+    )
+    if not updated:
+        raise HTTPException(404, "Data submission tidak ditemukan")
+
+    return CompletePickupResponse(
+        submission_id=valid_sub_uuid,
+        pickup_status="completed",
+        actual_volume_liters=actual_l,
+        biodiesel_liters=biodiesel_l,
+        co2_saved_kg=co2_kg,
+        cashback_idr=cashback_rp,
+    )
