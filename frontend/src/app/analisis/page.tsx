@@ -24,6 +24,15 @@ export default function AnalisisPage() {
   const [progress, setProgress] = useState(10);
   const [status, setStatus] = useState<Status>("loading");
   const [attempt, setAttempt] = useState(0);
+  const [currentTimeStr, setCurrentTimeStr] = useState("22.14");
+
+  // Set waktu saat komponen sudah mounting di client (mencegah prerender error)
+  useEffect(() => {
+    const timeFormatted = new Date()
+      .toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+      .replace(":", ".");
+    setCurrentTimeStr(timeFormatted);
+  }, []);
 
   // Animasi progress bar berjalan sampai 90% sambil menunggu API selesai
   useEffect(() => {
@@ -41,12 +50,10 @@ export default function AnalisisPage() {
 
     const photo = getPendingPhoto();
     if (!photo) {
-      // Jika user buka /analisis langsung tanpa pilih foto, arahkan ke /foto
       router.replace("/foto");
       return;
     }
 
-    // Timer timeout 15 detik jika AI lambat
     const timeoutId = setTimeout(() => {
       if (!isCancelled) setStatus("timeout");
     }, 15000);
@@ -57,14 +64,12 @@ export default function AnalisisPage() {
         if (isCancelled) return;
         clearTimeout(timeoutId);
 
-        // Jika AI mendeteksi foto gelap/buram/bukan jeriken limbah -> tampilkan GagalSheet!
         if (!res.vision.is_waste_detected || res.vision.purity_grade === "REJECT") {
           toast.error(res.vision.notes || "Jeriken tidak terlihat jelas");
           router.replace("/foto?gagal=1");
           return;
         }
 
-        // Simpan hasil analisis ke sessionStorage untuk dibaca halaman /laporan
         sessionStorage.setItem(
           "last_submission",
           JSON.stringify({
@@ -195,7 +200,7 @@ export default function AnalisisPage() {
       />
       <KoneksiSheet
         open={status === "offline"}
-        takenAt={new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }).replace(":", ".")}
+        takenAt={currentTimeStr}
         onResend={retry}
         onHome={() => router.push("/beranda")}
       />
